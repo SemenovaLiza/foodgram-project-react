@@ -3,7 +3,7 @@ from webcolors import name_to_hex
 from rest_framework import serializers
 from django.core.files.base import ContentFile
 
-from recipes.models import Tag, Ingredient, Recipe, RecipesIngredient, User
+from recipes.models import Tag, Recipe, User, RecipesTag
 
 
 class ColorSerializer(serializers.Field):
@@ -39,36 +39,29 @@ class TagSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'color', 'slug')
 
 
-class IngredientSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Ingredient
-        fields = ('id', 'name', 'measurement_unit')
-
-
-class ReInSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = RecipesIngredient
-        fields = ('ingredient', 'amount')
-
-
-class RecipeSerializer(serializers.ModelSerializer):
+class AddRecipeSerializer(serializers.ModelSerializer):
     image = Base64ImageField()
     author = UserSerializer(read_only=True)
-    tags = TagSerializer(read_only=True, many=True)
-    ingredients = IngredientSerializer(many=True)
+    tags = serializers.PrimaryKeyRelatedField(queryset=Tag.objects.all(), many=True)
 
     class Meta:
         model = Recipe
-        fields = (
-            'id', 'tags', 'author', 'ingredients',
-            'name', 'image', 'text', 'cooking_time'
-        )
+        fields = ('id', 'name', 'tags', 'text', 'image', 'author', 'cooking_time')
 
     def create(self, validated_data):
-        ingredient = validated_data.pop('ingredients')
+        tags = validated_data.pop('tags')
         recipe = Recipe.objects.create(**validated_data)
-        for ing in ingredient:
-            inger = Ingredient.objects.get(pk=ing.get('id'))
-
-            RecipesIngredient.objects.create(recipe=recipe, ingredient=inger)
+        for tag in tags:
+            RecipesTag.objects.create(recipe=recipe, tag=tag)
         return recipe
+
+
+class ListRecipeSerializer(serializers.ModelSerializer):
+    image = Base64ImageField()
+    author = UserSerializer(read_only=True)
+    tags = TagSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Recipe
+        fields = ('id', 'name', 'tags', 'text', 'image', 'author', 'cooking_time')
+        read_only_fields = ('tags',)

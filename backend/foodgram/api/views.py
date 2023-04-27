@@ -5,8 +5,8 @@ from rest_framework import status
 from rest_framework.response import Response
 
 
-from .serializers import TagSerializer, IngredientSerializer, RecipeSerializer
-from recipes.models import Tag, Ingredient, Recipe
+from .serializers import TagSerializer, AddRecipeSerializer, ListRecipeSerializer
+from recipes.models import Tag, Recipe
 
 
 class ListRetrieveViewSet(ListModelMixin, RetrieveModelMixin, CreateModelMixin, GenericViewSet):
@@ -18,14 +18,13 @@ class TagViewSet(ListRetrieveViewSet):
     serializer_class = TagSerializer
 
 
-class IngredientViewSet(ListRetrieveViewSet):
-    queryset = Ingredient.objects.all()
-    serializer_class = IngredientSerializer
-
-
 class RecipeViewSet(ModelViewSet):
     queryset = Recipe.objects.all()
-    serializer_class = RecipeSerializer
+
+    def get_serializer_class(self):
+        if self.action == 'list':
+            return ListRecipeSerializer
+        return AddRecipeSerializer
 
     def perform_create(self, serializer):
         return serializer.save(author=self.request.user)
