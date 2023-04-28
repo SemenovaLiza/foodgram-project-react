@@ -3,7 +3,7 @@ from webcolors import name_to_hex
 from rest_framework import serializers
 from django.core.files.base import ContentFile
 
-from recipes.models import Tag, Recipe, User, RecipesTag
+from recipes.models import Tag, Recipe, User, RecipesTag, Favorite
 
 
 class ColorSerializer(serializers.Field):
@@ -43,10 +43,11 @@ class AddRecipeSerializer(serializers.ModelSerializer):
     image = Base64ImageField()
     author = UserSerializer(read_only=True)
     tags = serializers.PrimaryKeyRelatedField(queryset=Tag.objects.all(), many=True)
+    is_favorite = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Recipe
-        fields = ('id', 'name', 'tags', 'text', 'image', 'author', 'cooking_time')
+        fields = ('id', 'name', 'tags', 'text', 'image', 'author', 'is_favorite', 'cooking_time')
 
     def create(self, validated_data):
         tags = validated_data.pop('tags')
@@ -55,13 +56,42 @@ class AddRecipeSerializer(serializers.ModelSerializer):
             RecipesTag.objects.create(recipe=recipe, tag=tag)
         return recipe
 
+    def get_is_favorite(self, obj):
+        recipe = Recipe.objects.get(recipe=obj.id)
+        favorite_obj = Favorite.objects.get(recipe=recipe.id, user=self.context['request'].user)
+        return int(favorite_obj.exist())
+
 
 class ListRecipeSerializer(serializers.ModelSerializer):
     image = Base64ImageField()
     author = UserSerializer(read_only=True)
     tags = TagSerializer(many=True, read_only=True)
+    is_favorite = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Recipe
-        fields = ('id', 'name', 'tags', 'text', 'image', 'author', 'cooking_time')
-        read_only_fields = ('tags',)
+        fields = ('id', 'name', 'tags', 'text', 'image', 'author', 'cooking_time', 'is_favorite')
+
+    def get_is_favorite(self, obj):
+        recipe = Recipe.objects.get(pk=obj.id)
+        favorite = Favorite.objects.filter(recipe=recipe, user=self.context['request'].user).exists()
+        return favorite
+
+
+class ShortRecipeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Recipe
+        fields = ('id', 'name', 'image', 'cooking_time')
+        read_only_fields = ('tags', 'name', 'image', 'cooking_time')
+
+
+class FavoriteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Favorite
+        fields = ('recipe', 'user')
+
+    def to_representation(self, instance):
+        return ShortRecipeSerializer(instance.recipe).data
+
+
+
