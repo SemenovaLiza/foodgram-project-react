@@ -49,28 +49,22 @@ class AddRecipeSerializer(serializers.ModelSerializer):
         model = Recipe
         fields = ('id', 'name', 'tags', 'text', 'image', 'author', 'is_favorite', 'cooking_time')
 
-    def create(self, validated_data):
-        tags = validated_data.pop('tags')
-        recipe = Recipe.objects.create(**validated_data)
-        for tag in tags:
-            RecipesTag.objects.create(recipe=recipe, tag=tag)
-        return recipe
-
     def get_is_favorite(self, obj):
-        recipe = Recipe.objects.get(recipe=obj.id)
-        favorite_obj = Favorite.objects.get(recipe=recipe.id, user=self.context['request'].user)
-        return int(favorite_obj.exist())
+        recipe = Recipe.objects.get(pk=obj.id)
+        favorite = Favorite.objects.filter(recipe=recipe, user=self.context['request'].user).exists()
+        return favorite
 
 
 class ListRecipeSerializer(serializers.ModelSerializer):
     image = Base64ImageField()
     author = UserSerializer(read_only=True)
-    tags = TagSerializer(many=True, read_only=True)
+    tags = TagSerializer(many=True)
     is_favorite = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Recipe
         fields = ('id', 'name', 'tags', 'text', 'image', 'author', 'cooking_time', 'is_favorite')
+        read_only_fields = ('tags',)
 
     def get_is_favorite(self, obj):
         recipe = Recipe.objects.get(pk=obj.id)
@@ -82,7 +76,7 @@ class ShortRecipeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Recipe
         fields = ('id', 'name', 'image', 'cooking_time')
-        read_only_fields = ('tags', 'name', 'image', 'cooking_time')
+        read_only_fields = ('name', 'image', 'cooking_time')
 
 
 class FavoriteSerializer(serializers.ModelSerializer):
@@ -92,6 +86,3 @@ class FavoriteSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         return ShortRecipeSerializer(instance.recipe).data
-
-
-
