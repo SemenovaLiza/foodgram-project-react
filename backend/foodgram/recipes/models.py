@@ -1,10 +1,19 @@
 from django.db import models
 from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator
+from django.contrib.auth.models import AbstractUser
 
 from .validators import validate_ingredient_number
 
-User = get_user_model()
+
+class CustomUser(AbstractUser):
+    email = models.EmailField(unique=True)
+    username = models.CharField(max_length=150, unique=True)
+    first_name = models.CharField(max_length=150)
+    last_name = models.CharField(max_length=150)
+    password = models.CharField(max_length=150)
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['username', 'first_name', 'last_name', 'password']
 
 
 class Tag(models.Model):
@@ -51,7 +60,7 @@ class Ingredient(models.Model):
 
 class Recipe(models.Model):
     author = models.ForeignKey(
-        User,
+        CustomUser,
         on_delete=models.CASCADE,
         related_name='recipes',
         verbose_name='Автор рецепта'
@@ -69,8 +78,11 @@ class Recipe(models.Model):
     )
     tags = models.ManyToManyField(
         Tag,
-        through='RecipesTag',
-        related_name='recipes'
+        through='RecipesTag'
+    )
+    ingredients = models.ManyToManyField(
+        Ingredient,
+        through='RecipesIngredient'
     )
     cooking_time = models.IntegerField(
         validators=[MinValueValidator(1)]
@@ -82,6 +94,19 @@ class Recipe(models.Model):
     class Meta:
         verbose_name = 'Рецепт'
         verbose_name_plural = 'Рецепты'
+
+
+class RecipesIngredient(models.Model):
+    recipe = models.ForeignKey(
+        Recipe,
+        on_delete=models.CASCADE,
+        related_name='ingredienttorecipe'
+    )
+    ingredient = models.ForeignKey(
+        Ingredient,
+        on_delete=models.CASCADE
+    )
+    amount = models.IntegerField()
 
 
 class RecipesTag(models.Model):
@@ -97,7 +122,7 @@ class RecipesTag(models.Model):
 
 class Favorite(models.Model):
     user = models.ForeignKey(
-        User,
+        CustomUser,
         on_delete=models.CASCADE,
         related_name='favorites'
     )
@@ -110,7 +135,7 @@ class Favorite(models.Model):
 
 class ShoppingCart(models.Model):
     user = models.ForeignKey(
-        User,
+        CustomUser,
         on_delete=models.CASCADE,
         related_name='shopping_cart'
     )
@@ -123,12 +148,12 @@ class ShoppingCart(models.Model):
 
 class Subscribtion(models.Model):
     follower = models.ForeignKey(
-        User,
+        CustomUser,
         on_delete=models.CASCADE,
         related_name='following'
     )
     following = models.ForeignKey(
-        User,
+        CustomUser,
         on_delete=models.CASCADE,
         related_name='followers'
     )

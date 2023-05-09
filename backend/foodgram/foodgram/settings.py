@@ -13,9 +13,11 @@ import os
 from pathlib import Path
 from datetime import timedelta
 
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+AUTH_USER_MODEL = "recipes.CustomUser"
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
@@ -39,6 +41,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'rest_framework.authtoken',
     'djoser',
     'recipes.apps.RecipesConfig',
     'api.apps.ApiConfig'
@@ -135,14 +138,21 @@ REST_FRAMEWORK = {
     ],
 
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-    ],
+        'rest_framework.authentication.TokenAuthentication',
+    ]
 }
 
-
-SIMPLE_JWT = {
-   'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
-   'AUTH_HEADER_TYPES': ('Bearer',),
+DJOSER = {
+    'SERIALIZERS': {
+        'user_create': 'api.serializers.CreateCustomUserSerializer',
+        'user': 'api.serializers.ListCustomUserSerializer',
+        'current_user': 'api.serializers.ListCustomUserSerializer'
+    },
+    'HIDE_USERS': False,
+    "PERMISSIONS": {
+        "user_list": ["rest_framework.permissions.IsAuthenticated"],
+        "user": ["rest_framework.permissions.IsAuthenticated"],
+    }
 }
 
 MEDIA_URL = '/media/'
