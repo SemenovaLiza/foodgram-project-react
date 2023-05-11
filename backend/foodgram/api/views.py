@@ -2,13 +2,14 @@ from django.db.models import Sum
 from django.http import HttpResponse
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
-from recipes.models import (CustomUser, Favorite, Ingredient, Recipe,
-                            RecipesIngredient, ShoppingCart, Subscription, Tag)
-from rest_framework import status
+from recipes.models import (Favorite, Ingredient, Recipe, RecipesIngredient,
+                            ShoppingCart, Tag)
+from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.mixins import ListModelMixin, RetrieveModelMixin
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, ModelViewSet
+from users.models import CustomUser, Subscription
 
 from .filters import RecipeFilter
 from .pagination import Pagination
@@ -18,17 +19,13 @@ from .serializers import (AddRecipeSerializer, CustomUserSerializer,
                           SubscriptionSerializer, TagSerializer)
 
 
-class ListRetrieveViewSet(ListModelMixin, RetrieveModelMixin, GenericViewSet):
-    pass
-
-
-class TagViewSet(ListRetrieveViewSet):
+class TagViewSet(viewsets.ReadOnlyModelViewSet):
     """Вывод списка тегов/вывод конкретоного тега."""
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
 
 
-class IngredientViewSet(ListRetrieveViewSet):
+class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     """Вывод списка ингредиентов/вывод конкретоного ингредиента."""
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
