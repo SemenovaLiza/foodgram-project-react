@@ -20,7 +20,7 @@ class Base64ImageField(serializers.ImageField):
         return super().to_internal_value(data)
 
 
-class IngredientRecipeSerializer(serializers.ModelSerializer):
+class RecipesIngredientSerializer(serializers.ModelSerializer):
     """Сериализатор для добавления ингредиентов в рецепт."""
     id = serializers.PrimaryKeyRelatedField(
         queryset=Ingredient.objects.all()
@@ -101,7 +101,7 @@ class RecipeSerializer(serializers.ModelSerializer):
     tags = TagSerializer(many=True)
     is_favorited = serializers.SerializerMethodField(read_only=True)
     is_in_shopping_cart = serializers.SerializerMethodField(read_only=True)
-    ingredients = IngredientRecipeSerializer(
+    ingredients = RecipesIngredientSerializer(
         many=True,
         source='ingredientsinrecipe')
 
@@ -112,7 +112,7 @@ class RecipeSerializer(serializers.ModelSerializer):
 
     def get_ingredients(self, obj):
         ingredients = RecipesIngredient.objects.filter(recipe=obj)
-        return IngredientRecipeSerializer(ingredients, many=True).data
+        return RecipesIngredientSerializer(ingredients, many=True).data
 
     def get_is_favorited(self, obj):
         recipe = Recipe.objects.get(pk=obj.id)
@@ -129,11 +129,12 @@ class AddRecipeSerializer(serializers.ModelSerializer):
     """Сериализатор для создания рецепта."""
     image = Base64ImageField()
     author = CustomUserSerializer(read_only=True)
-    tags = serializers.PrimaryKeyRelatedField(queryset=Tag.objects.all(), many=True)
     is_favorited = serializers.SerializerMethodField(read_only=True)
     is_in_shopping_cart = serializers.SerializerMethodField(read_only=True)
-    ingredients = IngredientRecipeSerializer(
-        many=True,
+    ingredients = RecipesIngredientSerializer(many=True)
+    tags = serializers.PrimaryKeyRelatedField(
+        queryset=Tag.objects.all(),
+        many=True
     )
 
     class Meta:

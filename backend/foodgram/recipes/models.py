@@ -137,6 +137,10 @@ class Recipe(models.Model):
         ],
         verbose_name='Время приготовления'
     )
+    pub_date = models.DateTimeField(
+        verbose_name='Дата публикации',
+        auto_now_add=True
+    )
 
     def __str__(self):
         return f'{self.author} - {self.name}({self.tags})'

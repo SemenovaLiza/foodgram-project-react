@@ -1,19 +1,21 @@
-from rest_framework.mixins import ListModelMixin, RetrieveModelMixin, CreateModelMixin
-from rest_framework.viewsets import GenericViewSet, ModelViewSet
 from django.db.models import Sum
-from rest_framework.views import APIView
 from django.http import HttpResponse
-from rest_framework import status, viewsets
-from rest_framework.decorators import action, api_view
-from rest_framework.response import Response
-from djoser.views import UserViewSet
-from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
+from djoser.views import UserViewSet
+from recipes.models import (CustomUser, Favorite, Ingredient, Recipe,
+                            RecipesIngredient, ShoppingCart, Subscription, Tag)
+from rest_framework import status
+from rest_framework.decorators import action
+from rest_framework.mixins import ListModelMixin, RetrieveModelMixin
+from rest_framework.response import Response
+from rest_framework.viewsets import GenericViewSet, ModelViewSet
 
-from .pagination import Pagination
-from .serializers import TagSerializer, AddRecipeSerializer, RecipeSerializer, FavoriteSerializer, ShoppingCartSerializer, CustomUserSerializer, SubscriptionSerializer, IngredientSerializer, IngredientRecipeSerializer
-from recipes.models import Tag, Recipe, Favorite, ShoppingCart, CustomUser, Subscription, Ingredient, RecipesIngredient
 from .filters import RecipeFilter
+from .pagination import Pagination
+from .serializers import (AddRecipeSerializer, CustomUserSerializer,
+                          FavoriteSerializer, IngredientSerializer,
+                          RecipeSerializer, ShoppingCartSerializer,
+                          SubscriptionSerializer, TagSerializer)
 
 
 class ListRetrieveViewSet(ListModelMixin, RetrieveModelMixin, GenericViewSet):
@@ -60,7 +62,9 @@ class RecipeViewSet(ModelViewSet):
             serializer = FavoriteSerializer(data=favorite_data)
             if serializer.is_valid(raise_exception=True):
                 serializer.save()
-                return Response(serializer.data, status=status.HTTP_201_CREATED)
+                return Response(
+                    serializer.data, status=status.HTTP_201_CREATED
+                )
 
         favorite = Favorite.objects.filter(recipe=recipe, user=request.user)
         favorite.delete()
@@ -77,12 +81,16 @@ class RecipeViewSet(ModelViewSet):
             serializer = ShoppingCartSerializer(data=shopping_cart_data)
             if serializer.is_valid(raise_exception=True):
                 serializer.save()
-                return Response(serializer.data, status=status.HTTP_201_CREATED)
-        shopping_cart = ShoppingCart.objects.filter(recipe=recipe, user=self.request.user)
+                return Response(
+                    serializer.data, status=status.HTTP_201_CREATED
+                )
+        shopping_cart = ShoppingCart.objects.filter(
+            recipe=recipe, user=self.request.user
+        )
         shopping_cart.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-    @action(detail=False, url_path='download_shopping_cart', methods=['get',])
+    @action(detail=False, url_path='download_shopping_cart', methods=['get', ])
     def download_shopping_cart(self, request):
         shopping_cart = ShoppingCart.objects.filter(user=self.request.user)
         recipes = [item.recipe.id for item in shopping_cart]
