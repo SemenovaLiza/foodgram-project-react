@@ -3,36 +3,47 @@ from rest_framework.viewsets import GenericViewSet, ModelViewSet
 from django.db.models import Sum
 from rest_framework.views import APIView
 from django.http import HttpResponse
-from rest_framework import status
+from rest_framework import status, viewsets
 from rest_framework.decorators import action, api_view
 from rest_framework.response import Response
 from djoser.views import UserViewSet
 from django.shortcuts import get_object_or_404
+from django_filters.rest_framework import DjangoFilterBackend
 
-from .serializers import TagSerializer, AddRecipeSerializer, ListRecipeSerializer, FavoriteSerializer, ShoppingCartSerializer, ListCustomUserSerializer, SubSerializer, IngredientSerializer, IngredientRecipeSerializer, rIngredientRecipeSerializer
-from recipes.models import Tag, Recipe, Favorite, ShoppingCart, CustomUser, Subscribtion, Ingredient, RecipesIngredient
+from .pagination import Pagination
+from .serializers import TagSerializer, AddRecipeSerializer, RecipeSerializer, FavoriteSerializer, ShoppingCartSerializer, CustomUserSerializer, SubscriptionSerializer, IngredientSerializer, IngredientRecipeSerializer
+from recipes.models import Tag, Recipe, Favorite, ShoppingCart, CustomUser, Subscription, Ingredient, RecipesIngredient
+from .filters import RecipeFilter
 
 
-class ListRetrieveViewSet(ListModelMixin, RetrieveModelMixin, CreateModelMixin, GenericViewSet):
+class ListRetrieveViewSet(ListModelMixin, RetrieveModelMixin, GenericViewSet):
     pass
 
 
-class IngredientViewSet(ListRetrieveViewSet):
-    queryset = Ingredient.objects.all()
-    serializer_class = IngredientSerializer
-
-
 class TagViewSet(ListRetrieveViewSet):
+    """Вывод списка тегов/вывод конкретоного тега."""
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
 
 
+class IngredientViewSet(ListRetrieveViewSet):
+    """Вывод списка ингредиентов/вывод конкретоного ингредиента."""
+    queryset = Ingredient.objects.all()
+    serializer_class = IngredientSerializer
+    search_fields = (r'^name', )
+
+
 class RecipeViewSet(ModelViewSet):
+    """Отображение работы с рецептами."""
     queryset = Recipe.objects.all()
+    pagination_class = Pagination
+    filter_backends = [DjangoFilterBackend, ]
+    filterset_class = RecipeFilter
+    search_fields = (r'^name', )
 
     def get_serializer_class(self):
         if self.action == 'list':
-            return ListRecipeSerializer
+            return RecipeSerializer
         return AddRecipeSerializer
 
     def perform_create(self, serializer):
@@ -67,57 +78,47 @@ class RecipeViewSet(ModelViewSet):
             if serializer.is_valid(raise_exception=True):
                 serializer.save()
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
-        elif request.method == 'DELETE':
-            shopping_cart = ShoppingCart.objects.filter(recipe=recipe, user=self.request.user)
-            shopping_cart.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        shopping_cart = ShoppingCart.objects.filter(recipe=recipe, user=self.request.user)
+        shopping_cart.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(detail=False, url_path='download_shopping_cart', methods=['get',])
     def download_shopping_cart(self, request):
         shopping_cart = ShoppingCart.objects.filter(user=self.request.user)
         recipes = [item.recipe.id for item in shopping_cart]
-        buy_list = RecipesIngredient.objects.filter(recipe__in=recipes).values('ingredient').annotate(amount=Sum('amount'))
-        tt = f'purchase list for {request.user.username} \n'
-        for i in buy_list:
-            ingredient_id = i.get('ingredient')
-            amount = i.get('amount')
+        purchase_list = RecipesIngredient.objects.filter(recipe__in=recipes).values('ingredient').annotate(amount=Sum('amount'))
+        text_file = f'Список покупок для {request.user.username} \n'
+        for item in purchase_list:
+            ingredient_id = item.get('ingredient')
+            amount = item.get('amount')
             ingredient = Ingredient.objects.get(pk=ingredient_id)
-            tt += f'{ingredient.name} - {amount} {ingredient.measurement_unit} \n'
-        recipei = [item.recipe.name for item in shopping_cart]
-        tt += 'recipes:'
-        for i in recipei:
-            tt += f'{i}'
-        response = HttpResponse(tt, content_type='text.txt')
+            text_file += f'{ingredient.name} - {amount} {ingredient.measurement_unit} \n'
+
+        response = HttpResponse(text_file, content_type='text.txt')
         response['Content-Disposition'] = 'attachment; filename="ttt.txt"'
         return response
 
 
 class CustomUserViewSet(UserViewSet):
+    """Отображение работы с пользователями."""
     queryset = CustomUser.objects.all()
-    serializer_class = ListCustomUserSerializer
+    serializer_class = CustomUserSerializer
+    pagination_class = Pagination
+
+    @action(detail=False, url_path='subscriptions', methods=['get'])
+    def subscriptions(self, request):
+        subsctiptions = self.request.user.following
+        serializer = SubscriptionSerializer(subsctiptions, many=True, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     @action(detail=True, url_path='subscribe', methods=['post', 'delete'])
     def subscribe(self, request, id):
         following = CustomUser.objects.get(pk=id)
         if request.method == 'POST':
-            follow = Subscribtion.objects.create(follower=request.user, following=following)
-            serializer = SubSerializer(follow, context={'request': request})
+            subscription = Subscription.objects.create(follower=self.request.user, following=following)
+            serializer = SubscriptionSerializer(subscription, context={'request': request})
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-        sub = Subscribtion.objects.filter(following=following, follower=request.user)
-        sub.delete()
+        subscription = Subscription.objects.filter(following=following, follower=self.request.user)
+        subscription.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
-
-
-@api_view(['GET'])
-def shopping_cart(request):
-    shopping_cart = ShoppingCart.objects.filter(user=request.user)
-    serializer = ShoppingCartSerializer(shopping_cart, many=True)
-    return Response(serializer.data)
-
-@api_view(['GET'])
-def rt(request):
-    rt = RecipesIngredient.objects.filter(recipe=1)
-    serializer = rIngredientRecipeSerializer(rt, many=True)
-    return Response(serializer.data)
