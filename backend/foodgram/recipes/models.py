@@ -1,14 +1,8 @@
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
-from django.core.validators import (
-    MaxValueValidator,
-    MinValueValidator
-)
 
+from foodgram.settings import NAME_MAX_LENGTH, RECIPE_MAX_LENGTH
 from users.models import CustomUser
-from foodgram.settings import (
-    NAME_MAX_LENGTH,
-    RECIPE_MAX_LENGTH
-)
 
 
 class Tag(models.Model):

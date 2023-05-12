@@ -8,8 +8,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
-from recipes.models import (Favorite, Ingredient, Recipe,
-                            RecipesIngredient, ShoppingCart, Tag)
+from recipes.models import (Favorite, Ingredient, Recipe, RecipesIngredient,
+                            ShoppingCart, Tag)
 from users.models import CustomUser, Subscription
 
 from .filters import RecipeFilter
