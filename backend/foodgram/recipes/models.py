@@ -1,6 +1,5 @@
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
-
 from foodgram.settings import NAME_MAX_LENGTH, RECIPE_MAX_LENGTH
 from users.models import CustomUser
 
@@ -11,7 +10,7 @@ class Tag(models.Model):
         max_length=NAME_MAX_LENGTH,
         unique=True,
         verbose_name='Название тега'
-        )
+    )
     color = models.CharField(
         max_length=7,
         unique=True,
@@ -58,7 +57,7 @@ class Recipe(models.Model):
         on_delete=models.CASCADE,
         related_name='recipes',
         verbose_name='Автор рецепта'
-        )
+    )
     name = models.CharField(
         max_length=RECIPE_MAX_LENGTH,
         verbose_name='Название рецепта'
