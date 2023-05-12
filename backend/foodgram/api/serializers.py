@@ -1,11 +1,12 @@
 from base64 import b64decode
+
 from rest_framework import serializers
 from django.core.files.base import ContentFile
 from djoser.serializers import UserCreateSerializer, UserSerializer
 
-from users.models import CustomUser, Subscription
 from recipes.models import (Favorite, Ingredient, Recipe, RecipesIngredient,
                             RecipesTag, ShoppingCart, Tag)
+from users.models import CustomUser, Subscription
 
 
 class Base64ImageField(serializers.ImageField):
@@ -34,8 +35,10 @@ class CustomUserSerializer(UserSerializer):
         )
 
     def get_is_subscribed(self, obj):
-        user = self.context.get('request').user
         following = CustomUser.objects.get(pk=obj.id)
+        user = self.context.get('request').user
+        if user.is_anonymous:
+            return False
         subscribtion = user.following.filter(following=following).exists()
         return subscribtion
 
@@ -65,9 +68,12 @@ class SubscriptionSerializer(serializers.ModelSerializer):
         )
 
     def get_is_subscribed(self, obj):
-        user = self.context['request'].user
-        subscribtion = user.following.filter(following=obj.following).exists()
-        return subscribtion
+        request = self.context.get('request')
+        if request is None or request.user.is_anonymous:
+            return False
+        return Subscription.objects.filter(
+            follower=request.user, following=obj
+        ).exists()
 
     def get_recipes(self, obj):
         return ShortRecipeSerializer(obj.following.recipes, many=True).data
@@ -132,11 +138,15 @@ class RecipeSerializer(serializers.ModelSerializer):
 
     def get_is_favorited(self, obj):
         user = self.context.get('request').user
+        if user.is_anonymous:
+            return False
         favorite = user.favorites.filter(recipe=obj.id).exists()
         return favorite
 
     def get_is_in_shopping_cart(self, obj):
         user = self.context.get('request').user
+        if user.is_anonymous:
+            return False
         shopping_cart = user.shopping_cart.filter(recipe=obj.id).exists()
         return shopping_cart
 
@@ -153,7 +163,8 @@ class AddRecipeSerializer(RecipeSerializer):
     def create_ingredients(self, ingredients, recipe):
         for ingredient in ingredients:
             RecipesIngredient.objects.create(
-                recipe=recipe, ingredient=ingredient.get('id'),
+                recipe=recipe,
+                ingredient=ingredient.get('id'),
                 amount=ingredient.get('amount')
             )
 
@@ -161,9 +172,10 @@ class AddRecipeSerializer(RecipeSerializer):
         recipe.tags.set(tags)
 
     def create(self, validated_data):
+        author = self.context.get('request').user
         ingredients = validated_data.pop('ingredients')
         tags = validated_data.pop('tags')
-        recipe = Recipe.objects.create(**validated_data)
+        recipe = Recipe.objects.create(author=author, **validated_data)
         self.create_ingredients(ingredients, recipe)
         self.create_tags(tags, recipe)
         return recipe

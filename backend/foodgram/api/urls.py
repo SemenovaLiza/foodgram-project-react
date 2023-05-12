@@ -6,8 +6,7 @@ from rest_framework.routers import DefaultRouter
 from .views import (
     TagViewSet,
     RecipeViewSet,
-    CustomUserViewSet,
-    IngredientViewSet
+    IngredientViewSet, CustomUserViewSet
 )
 
 router = DefaultRouter()

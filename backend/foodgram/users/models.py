@@ -23,7 +23,8 @@ class CustomUser(AbstractUser):
         validators=[
             RegexValidator(
                 r'^[\w.@+-]+\Z',
-                message='Никнейм должен содержать: буквы латинского алфавита, цифры, подчеркивание, знак "@"'
+                message='Никнейм должен содержать: буквы латинского алфавита,'
+                'цифры, подчеркивание, знак "@"'
             ),
         ],
         verbose_name='Никнейм пользователя'
@@ -68,6 +69,5 @@ class Subscription(models.Model):
     )
 
     class Meta:
-        ordering = ('-id', )
         verbose_name = 'Подписки'
         verbose_name_plural = 'Подписки'
