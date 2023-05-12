@@ -53,9 +53,9 @@ class SubscriptionSerializer(serializers.ModelSerializer):
     id = serializers.ReadOnlyField(source='following.id')
     username = serializers.ReadOnlyField(source='following.username')
     email = serializers.ReadOnlyField(source='following.email')
-    is_subscribed = serializers.SerializerMethodField(read_only=True)
-    recipes = serializers.SerializerMethodField(read_only=True)
-    recipes_count = serializers.SerializerMethodField(read_only=True)
+    is_subscribed = serializers.SerializerMethodField()
+    recipes = serializers.SerializerMethodField()
+    recipes_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Subscription
@@ -64,6 +64,7 @@ class SubscriptionSerializer(serializers.ModelSerializer):
             'email', 'is_subscribed',
             'recipes', 'recipes_count'
         )
+        read_only_fields = ('is_subscribed', 'recipes', 'recipes_count')
 
     def get_is_subscribed(self, obj):
         request = self.context.get('request')
