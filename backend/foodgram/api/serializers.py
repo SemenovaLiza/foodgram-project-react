@@ -1,11 +1,9 @@
 from base64 import b64decode
-
 from django.core.files.base import ContentFile
 from djoser.serializers import UserCreateSerializer, UserSerializer
-from rest_framework import serializers
-
 from recipes.models import (Favorite, Ingredient, Recipe, RecipesIngredient,
                             RecipesTag, ShoppingCart, Tag)
+from rest_framework import serializers
 from users.models import CustomUser, Subscription
 
 
@@ -39,8 +37,7 @@ class CustomUserSerializer(UserSerializer):
         user = self.context.get('request').user
         if user.is_anonymous:
             return False
-        subscribtion = user.following.filter(following=following).exists()
-        return subscribtion
+        return user.following.filter(following=following).exists()
 
 
 class CreateCustomUserSerializer(UserCreateSerializer):
@@ -140,15 +137,13 @@ class RecipeSerializer(serializers.ModelSerializer):
         user = self.context.get('request').user
         if user.is_anonymous:
             return False
-        favorite = user.favorites.filter(recipe=obj.id).exists()
-        return favorite
+        return user.favorites.filter(recipe=obj.id).exists()
 
     def get_is_in_shopping_cart(self, obj):
         user = self.context.get('request').user
         if user.is_anonymous:
             return False
-        shopping_cart = user.shopping_cart.filter(recipe=obj.id).exists()
-        return shopping_cart
+        return user.shopping_cart.filter(recipe=obj.id).exists()
 
 
 class AddRecipeSerializer(RecipeSerializer):

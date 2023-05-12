@@ -2,16 +2,14 @@ from django.db.models import Sum
 from django.http import HttpResponse
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
+from recipes.models import (Favorite, Ingredient, Recipe, RecipesIngredient,
+                            ShoppingCart, Tag)
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
-
-from recipes.models import (Favorite, Ingredient, Recipe, RecipesIngredient,
-                            ShoppingCart, Tag)
 from users.models import CustomUser, Subscription
-
 from .filters import RecipeFilter
 from .pagination import Pagination
 from .permissions import IsAuthorOrAdminOrReadOnly
@@ -67,9 +65,9 @@ class RecipeViewSet(ModelViewSet):
         recipes = [item.recipe.id for item in shopping_cart]
         purchase_list = RecipesIngredient.objects.filter(
             recipe__in=recipes
-            ).values(
-                'ingredient'
-            ).annotate(amount=Sum('amount'))
+        ).values(
+            'ingredient'
+        ).annotate(amount=Sum('amount'))
 
         text_file = f'Список покупок для {request.user.username} \n'
         for item in purchase_list:
