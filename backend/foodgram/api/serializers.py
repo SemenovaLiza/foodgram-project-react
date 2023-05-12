@@ -113,10 +113,10 @@ class IngredientSerializer(serializers.ModelSerializer):
 class RecipeSerializer(serializers.ModelSerializer):
     """Сериализатор для отображения списка рецептов."""
     image = Base64ImageField()
-    author = CustomUserSerializer(read_only=True)
+    author = CustomUserSerializer()
     tags = TagSerializer(many=True)
-    is_favorited = serializers.SerializerMethodField(read_only=True)
-    is_in_shopping_cart = serializers.SerializerMethodField(read_only=True)
+    is_favorited = serializers.SerializerMethodField()
+    is_in_shopping_cart = serializers.SerializerMethodField()
     ingredients = RecipesIngredientSerializer(
         many=True,
         source='ingredientsinrecipe')
@@ -129,7 +129,9 @@ class RecipeSerializer(serializers.ModelSerializer):
             'cooking_time', 'is_favorited',
             'is_in_shopping_cart', 'ingredients'
         )
-        read_only_fields = ('tags',)
+        read_only_fields = (
+            'tags', 'author', 'is_favorited', 'is_in_shopping_cart'
+        )
 
     def get_ingredients(self, obj):
         ingredients = RecipesIngredient.objects.get(recipe=obj)
