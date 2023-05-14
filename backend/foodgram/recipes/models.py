@@ -1,5 +1,7 @@
+from colorfield.fields import ColorField
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+
 from foodgram.settings import NAME_MAX_LENGTH, RECIPE_MAX_LENGTH
 from users.models import CustomUser
 
@@ -11,7 +13,8 @@ class Tag(models.Model):
         unique=True,
         verbose_name='Название тега'
     )
-    color = models.CharField(
+    color = ColorField(
+        format="hex",
         max_length=7,
         unique=True,
         verbose_name='Цвет тега'
@@ -79,7 +82,7 @@ class Recipe(models.Model):
         through='RecipesIngredient',
         verbose_name='Ингредиенты'
     )
-    cooking_time = models.IntegerField(
+    cooking_time = models.PositiveSmallIntegerField(
         validators=[
             MinValueValidator(1),
             MaxValueValidator(1000)

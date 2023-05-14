@@ -30,7 +30,7 @@ SECRET_KEY = 'django-insecure-2zu^uvf9ko1y@shp2n3y8-6k47h@1b(e)6-^8h*)0w&5(x=!(w
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -48,7 +48,9 @@ INSTALLED_APPS = [
     'recipes.apps.RecipesConfig',
     'api.apps.ApiConfig',
     'django_filters',
-    'users'
+    'colorfield',
+    'users.apps.UsersConfig',
+
 ]
 
 MIDDLEWARE = [
