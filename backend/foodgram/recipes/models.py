@@ -1,7 +1,6 @@
 from colorfield.fields import ColorField
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
-
 from foodgram.settings import NAME_MAX_LENGTH, RECIPE_MAX_LENGTH
 from users.models import CustomUser
 

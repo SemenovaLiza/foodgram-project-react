@@ -2,7 +2,6 @@ from csv import DictReader
 
 from django.conf import settings
 from django.core.management.base import BaseCommand
-
 from recipes.models import Ingredient, Tag
 
 file_path = f'{settings.BASE_DIR}/data/'
