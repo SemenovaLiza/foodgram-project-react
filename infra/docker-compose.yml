@@ -15,7 +15,7 @@ services:
     depends_on:
       - db
     env_file:
-      - - ./.env
+      - ./.env
     restart: always
 
   frontend:
