@@ -171,17 +171,17 @@ class AddRecipeSerializer(RecipeSerializer):
         return recipe
 
     def update(self, instance, validated_data):
-        RecipesTag.objects.filter(recipe=instance).delete()
-        RecipesIngredient.objects.filter(recipe=instance).delete()
-        ingredients = validated_data.pop('ingredients')
-        tags = validated_data.pop('tags')
-        self.create_ingredients(ingredients, instance)
-        self.create_tags(tags, instance)
-        instance.name = validated_data.pop('name')
-        instance.text = validated_data.pop('text')
-        if validated_data.get('image'):
-            instance.image = validated_data.pop('image')
-        instance.cooking_time = validated_data.pop('cooking_time')
+        instance.image = validated_data.get('image', instance.image)
+        instance.name = validated_data.get('name', instance.name)
+        instance.text = validated_data.get('text', instance.text)
+        instance.cooking_time = validated_data.get(
+            'cooking_time', instance.cooking_time
+        )
+        instance.tags.clear()
+        tags_data = self.initial_data.get('tags')
+        instance.tags.set(tags_data)
+        RecipesIngredient.objects.filter(recipe=instance).all().delete()
+        self.create_ingredients(validated_data.get('ingredients'), instance)
         instance.save()
         return instance
 
