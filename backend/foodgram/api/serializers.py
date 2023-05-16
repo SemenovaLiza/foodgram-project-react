@@ -1,7 +1,7 @@
 from djoser.serializers import UserCreateSerializer, UserSerializer
 from drf_extra_fields.fields import Base64ImageField
 from recipes.models import (Favorite, Ingredient, Recipe, RecipesIngredient,
-                            RecipesTag, RecipeTag, ShoppingCart, Tag)
+                            RecipesTag, ShoppingCart, Tag)
 from rest_framework import serializers
 from users.models import CustomUser, Subscription
 
@@ -159,7 +159,7 @@ class AddRecipeSerializer(RecipeSerializer):
 
     def create_tags(self, tags, recipe):
         for tag in tags:
-            RecipeTag.objects.create(recipe=recipe, tag=tag)
+            RecipesTag.objects.create(recipe=recipe, tag=tag)
 
     def create(self, validated_data):
         author = self.context.get('request').user
