@@ -30,7 +30,7 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     """Возвращает список ингредиентов/конкретный ингредиент."""
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
-    search_fields = (r'^name', )
+    search_fields = ('^name', )
 
 
 class RecipeViewSet(ModelViewSet):
