@@ -11,7 +11,7 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 from users.models import CustomUser, Subscription
 
-from .filters import RecipeFilter
+from .filters import RecipeFilter, IngredientSearchFilter
 from .pagination import Pagination
 from .permissions import IsAuthorOrAdminOrReadOnly
 from .serializers import (AddRecipeSerializer, CustomUserSerializer,
@@ -30,6 +30,7 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     """Возвращает список ингредиентов/конкретный ингредиент."""
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
+    filter_backends = (IngredientSearchFilter,)
     search_fields = ('^name',)
 
 
