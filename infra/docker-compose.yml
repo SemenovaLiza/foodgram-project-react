@@ -5,7 +5,7 @@ services:
     volumes:
       - /var/lib/postgresql/data/
     env_file:
-      - ../../.env
+      - ./.env
 
   backend:
     image: semenovaliza/foodgram-backend:v1.05.2023
@@ -15,7 +15,7 @@ services:
     depends_on:
       - db
     env_file:
-      - - ../../.env
+      - - ./.env
     restart: always
 
   frontend:
