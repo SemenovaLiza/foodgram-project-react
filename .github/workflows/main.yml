@@ -62,6 +62,7 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           passphrase: ${{ secrets.PASSPHRASE }}
           script: |
+            sudo docker pull semenovaliza/foodgram-backend:v1.05.2023
             sudo docker-compose stop
             sudo docker-compose rm backend
             touch .env
