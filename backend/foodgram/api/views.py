@@ -11,7 +11,7 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 from users.models import CustomUser, Subscription
 
-from .filters import RecipeFilter, IngredientSearchFilter
+from .filters import IngredientSearchFilter, RecipeFilter
 from .pagination import Pagination
 from .permissions import IsAuthorOrAdminOrReadOnly
 from .serializers import (AddRecipeSerializer, CustomUserSerializer,
