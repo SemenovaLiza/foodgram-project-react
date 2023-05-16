@@ -63,6 +63,7 @@ jobs:
           passphrase: ${{ secrets.PASSPHRASE }}
           script: |
             sudo docker pull semenovaliza/foodgram-backend:v1.05.2023
+            sudo docker pull semenovaliza/foodgram-frontend:v1.05.2023
             sudo docker-compose stop
             sudo docker-compose rm backend
             rm .env
@@ -73,5 +74,5 @@ jobs:
             echo POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }} >> .env
             echo DB_HOST=${{ secrets.DB_HOST }} >> .env
             echo DB_PORT=${{ secrets.DB_PORT }} >> .env
+            echo DJ_SECRET_KEY=${{ secrets.DJ_SECRET_KEY }} >> .env
             sudo docker-compose up -d
-     
