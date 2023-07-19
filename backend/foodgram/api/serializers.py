@@ -21,11 +21,10 @@ class CustomUserSerializer(UserSerializer):
         )
 
     def get_is_subscribed(self, obj):
-        following = CustomUser.objects.get(pk=obj.id)
         user = self.context.get('request').user
         if user.is_anonymous:
             return False
-        return user.following.filter(following=following).exists()
+        return Subscription.objects.filter(follower=user, following=obj.id).exists()
 
 
 class CreateCustomUserSerializer(UserCreateSerializer):
@@ -35,37 +34,32 @@ class CreateCustomUserSerializer(UserCreateSerializer):
         fields = ('email', 'username', 'first_name', 'last_name', 'password')
 
 
-class SubscriptionSerializer(serializers.ModelSerializer):
-    """Сериализатор для создания подписки на автора."""
-    id = serializers.ReadOnlyField(source='following.id')
-    username = serializers.ReadOnlyField(source='following.username')
-    email = serializers.ReadOnlyField(source='following.email')
-    is_subscribed = serializers.SerializerMethodField()
+class SubscriptionSerializer(CustomUserSerializer):
+    """Сериализатор для отображения подписок."""
     recipes = serializers.SerializerMethodField()
     recipes_count = serializers.SerializerMethodField()
 
-    class Meta:
-        model = Subscription
-        fields = (
-            'id', 'username',
-            'email', 'is_subscribed',
-            'recipes', 'recipes_count'
+    class Meta(CustomUserSerializer.Meta):
+        fields = CustomUserSerializer.Meta.fields + ('recipes', 'recipes_count')
+        read_only_fields = (
+            'id', 'email',
+            'username',
+            'first_name',
+            'last_name'
         )
-        read_only_fields = ('is_subscribed', 'recipes', 'recipes_count')
-
-    def get_is_subscribed(self, obj):
-        request = self.context.get('request')
-        if request is None or request.user.is_anonymous:
-            return False
-        return Subscription.objects.filter(
-            follower=request.user, following=obj
-        ).exists()
 
     def get_recipes(self, obj):
-        return ShortRecipeSerializer(obj.following.recipes, many=True).data
+        request = self.context.get('request')
+        user = CustomUser.objects.get(pk=obj.id)
+        recipes = user.recipes.all()
+        recipes_limit = request.GET.get('recipes_limit')
+        if recipes_limit:
+            recipes = recipes[:int(recipes_limit)]
+        return ShortRecipeSerializer(recipes, many=True).data
 
     def get_recipes_count(self, obj):
-        return obj.following.recipes.count()
+        user = CustomUser.objects.get(pk=obj.id)
+        return user.recipes.count()
 
 
 class RecipesIngredientSerializer(serializers.ModelSerializer):

@@ -10,14 +10,14 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 from users.models import CustomUser, Subscription
-
+from django.shortcuts import get_object_or_404
 from .filters import IngredientSearchFilter, RecipeFilter
 from .pagination import Pagination
 from .permissions import IsAuthorOrAdminOrReadOnly
 from .serializers import (AddRecipeSerializer, CustomUserSerializer,
                           FavoriteSerializer, IngredientSerializer,
                           RecipeSerializer, ShoppingCartSerializer,
-                          SubscriptionSerializer, TagSerializer)
+                          TagSerializer, SubscriptionSerializer)
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
@@ -112,7 +112,7 @@ class CustomUserViewSet(UserViewSet):
     @action(detail=False, methods=['get'],
             permission_classes=[IsAuthenticated, ])
     def subscriptions(self, request):
-        subsctiptions = self.request.user.following
+        subsctiptions = CustomUser.objects.filter(followers__follower=self.request.user)
         serializer = SubscriptionSerializer(
             subsctiptions, many=True, context={'request': request}
         )
@@ -121,15 +121,12 @@ class CustomUserViewSet(UserViewSet):
     @action(detail=True, methods=['post', 'delete'],
             permission_classes=[IsAuthenticated, ])
     def subscribe(self, request, id):
-        following = CustomUser.objects.get(pk=id)
+        following = get_object_or_404(CustomUser, pk=id)
         if request.method == 'POST':
-            subscription = Subscription.objects.create(
-                follower=self.request.user, following=following
-            )
-            serializer = SubscriptionSerializer(
-                subscription, context={'request': request}
-            )
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            serializer = SubscriptionSerializer(following, data=self.request.data, context={'request': request})
+            if serializer.is_valid(raise_exception=True):
+                Subscription.objects.create(follower=self.request.user, following=following)
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
 
         subscription = Subscription.objects.filter(
             following=following, follower=self.request.user
