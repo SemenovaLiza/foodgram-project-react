@@ -24,7 +24,7 @@ class CustomUserSerializer(UserSerializer):
         user = self.context.get('request').user
         if user.is_anonymous:
             return False
-        return Subscription.objects.filter(follower=user, following=obj.id).exists()
+        return Subscription.objects.filter(follower=user, following=obj.id ).exists()
 
 
 class CreateCustomUserSerializer(UserCreateSerializer):
@@ -52,7 +52,7 @@ class SubscriptionSerializer(CustomUserSerializer):
         request = self.context.get('request')
         user = CustomUser.objects.get(pk=obj.id)
         recipes = user.recipes.all()
-        recipes_limit = request.GET.get('recipes_limit')
+        recipes_limit = request.query_params.get('recipes_limit')
         if recipes_limit:
             recipes = recipes[:int(recipes_limit)]
         return ShortRecipeSerializer(recipes, many=True).data
