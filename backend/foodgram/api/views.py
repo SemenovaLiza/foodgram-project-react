@@ -91,7 +91,7 @@ class RecipeViewSet(ModelViewSet):
                 'recipe': recipe.id,
                 'user': request.user.id
             }
-            serializer = obj_serializer(data=data)
+            serializer = obj_serializer(data=data, context={'request': request})
             if serializer.is_valid(raise_exception=True):
                 serializer.save()
                 return Response(
