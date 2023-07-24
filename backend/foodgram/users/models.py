@@ -45,6 +45,12 @@ class CustomUser(AbstractUser):
     class Meta:
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['email', 'password'],
+                name='unique_password_email'
+            )
+        ]
 
 
 class Subscription(models.Model):
@@ -64,4 +70,10 @@ class Subscription(models.Model):
 
     class Meta:
         verbose_name = 'Подписки'
-        verbose_name_plural = 'Подписки'
+        verbose_name_plural = 'Подписки',
+        constraints = [
+            models.UniqueConstraint(
+                fields=['follower', 'following'],
+                name='unique_follower_following'
+            )
+        ]

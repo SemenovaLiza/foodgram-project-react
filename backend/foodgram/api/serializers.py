@@ -1,7 +1,7 @@
 from djoser.serializers import UserCreateSerializer, UserSerializer
 from drf_extra_fields.fields import Base64ImageField
 from recipes.models import (Favorite, Ingredient, Recipe, RecipesIngredient,
-                            RecipesTag, ShoppingCart, Tag)
+                            ShoppingCart, Tag)
 from rest_framework import serializers
 from users.models import CustomUser, Subscription
 
@@ -24,7 +24,10 @@ class CustomUserSerializer(UserSerializer):
         user = self.context.get('request').user
         if user.is_anonymous:
             return False
-        return Subscription.objects.filter(follower=user, following=obj.id ).exists()
+        return Subscription.objects.filter(
+            follower=user,
+            following=obj.id
+        ).exists()
 
 
 class CreateCustomUserSerializer(UserCreateSerializer):
@@ -33,6 +36,12 @@ class CreateCustomUserSerializer(UserCreateSerializer):
         model = CustomUser
         fields = ('email', 'username', 'first_name', 'last_name', 'password')
 
+    def validate(self, data):
+        if data['email'] == data['password']:
+            raise serializers.ValidationError(
+                'Пароль не должен совпадать с персональной информацией.')
+        return data
+
 
 class SubscriptionSerializer(CustomUserSerializer):
     """Сериализатор для отображения подписок."""
@@ -40,7 +49,10 @@ class SubscriptionSerializer(CustomUserSerializer):
     recipes_count = serializers.SerializerMethodField()
 
     class Meta(CustomUserSerializer.Meta):
-        fields = CustomUserSerializer.Meta.fields + ('recipes', 'recipes_count')
+        fields = CustomUserSerializer.Meta.fields + (
+            'recipes',
+            'recipes_count'
+        )
         read_only_fields = (
             'id', 'email',
             'username',
@@ -143,37 +155,48 @@ class AddRecipeSerializer(RecipeSerializer):
         read_only=True, default=serializers.CurrentUserDefault()
     )
 
-    def create_ingredients(self, ingredients, recipe):
-        for ingredient in ingredients:
-            RecipesIngredient.objects.create(
-                recipe=recipe,
-                ingredient=ingredient.get('id'),
-                amount=ingredient.get('amount')
-            )
+    def validate_tags(self, value):
+        if not value:
+            raise serializers.ValidationError('Добавьте теги.')
+        return value
 
-    def create_tags(self, tags, recipe):
-        for tag in tags:
-            recipe.tags.add(tag)
+    def validate_ingredients(self, value):
+        ingredients = []
+        if not value:
+            raise serializers.ValidationError('Добавьте ингредиенты.')
+        for ingredient in value:
+            if ingredient.get('id') in ingredients:
+                raise serializers.ValidationError(
+                    'Этот ингредиент уже добавлен.'
+                )
+            ingredients.append(ingredient.get('id'))
+        return value
+
+    @staticmethod
+    def create_ingredients(ingredients, recipe):
+        for ingredient_data in ingredients:
+            RecipesIngredient.objects.create(
+                ingredient=ingredient_data.pop('id'),
+                amount=ingredient_data.pop('amount'),
+                recipe=recipe,
+            )
 
     def create(self, validated_data):
         author = self.context.get('request').user
         ingredients = validated_data.pop('ingredients')
         tags = validated_data.pop('tags')
         recipe = Recipe.objects.create(author=author, **validated_data)
-        self.create_ingredients(ingredients, recipe)
         recipe.tags.set(tags)
+        self.create_ingredients(ingredients, recipe)
         return recipe
 
     def update(self, instance, validated_data):
-        if 'ingredients' in validated_data:
-            ingredients = validated_data.pop('ingredients')
-            instance.ingredients.clear()
-            self.create_ingredients(ingredients, instance)
-        if 'tags' in validated_data:
-            instance.tags.set(
-                validated_data.pop('tags'))
-        return super().update(
-            instance, validated_data)
+        instance.tags.clear()
+        instance.ingredients.clear()
+        instance.tags.set(validated_data.pop('tags'))
+        ingredients = validated_data.pop('ingredients')
+        self.create_ingredients(ingredients, instance)
+        return super().update(instance, validated_data)
 
     def to_representation(self, instance):
         return RecipeSerializer(
