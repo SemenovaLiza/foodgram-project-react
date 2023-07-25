@@ -1,3 +1,4 @@
+from django.shortcuts import get_object_or_404
 from djoser.serializers import UserCreateSerializer, UserSerializer
 from drf_extra_fields.fields import Base64ImageField
 from recipes.models import (Favorite, Ingredient, Recipe, RecipesIngredient,
@@ -62,7 +63,7 @@ class SubscriptionSerializer(CustomUserSerializer):
 
     def get_recipes(self, obj):
         request = self.context.get('request')
-        user = CustomUser.objects.get(pk=obj.id)
+        user = get_object_or_404(CustomUser, pk=obj.id)
         recipes = user.recipes.all()
         recipes_limit = request.query_params.get('recipes_limit')
         if recipes_limit:
@@ -70,23 +71,8 @@ class SubscriptionSerializer(CustomUserSerializer):
         return ShortRecipeSerializer(recipes, many=True).data
 
     def get_recipes_count(self, obj):
-        user = CustomUser.objects.get(pk=obj.id)
+        user = get_object_or_404(CustomUser, pk=obj.id)
         return user.recipes.count()
-
-
-class RecipesIngredientSerializer(serializers.ModelSerializer):
-    """Сериализатор для добавления ингредиентов в рецепт."""
-    id = serializers.PrimaryKeyRelatedField(
-        queryset=Ingredient.objects.all()
-    )
-    name = serializers.ReadOnlyField(source='ingredient.name')
-    measurement_unit = serializers.ReadOnlyField(
-        source='ingredient.measurement_unit'
-    )
-
-    class Meta:
-        model = RecipesIngredient
-        fields = ('id', 'name', 'measurement_unit', 'amount',)
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -101,6 +87,21 @@ class IngredientSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ingredient
         fields = ('id', 'name', 'measurement_unit')
+
+
+class RecipesIngredientSerializer(serializers.ModelSerializer):
+    """Сериализатор для добавления ингредиентов в рецепт."""
+    id = serializers.PrimaryKeyRelatedField(
+        queryset=Ingredient.objects.all()
+    )
+    name = serializers.ReadOnlyField(source='ingredient.name')
+    measurement_unit = serializers.ReadOnlyField(
+        source='ingredient.measurement_unit'
+    )
+
+    class Meta:
+        model = RecipesIngredient
+        fields = ('id', 'name', 'measurement_unit', 'amount')
 
 
 class RecipeSerializer(serializers.ModelSerializer):
@@ -127,7 +128,7 @@ class RecipeSerializer(serializers.ModelSerializer):
         )
 
     def get_ingredients(self, obj):
-        ingredients = RecipesIngredient.objects.get(recipe=obj)
+        ingredients = RecipesIngredient.objects.filter(recipe=obj.id)
         return RecipesIngredientSerializer(ingredients, many=True).data
 
     def get_is_favorited(self, obj):
@@ -178,7 +179,7 @@ class AddRecipeSerializer(RecipeSerializer):
             RecipesIngredient.objects.create(
                 ingredient=ingredient_data.pop('id'),
                 amount=ingredient_data.pop('amount'),
-                recipe=recipe,
+                recipe=recipe
             )
 
     def create(self, validated_data):

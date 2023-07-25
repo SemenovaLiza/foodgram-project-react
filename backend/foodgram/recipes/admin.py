@@ -1,10 +1,17 @@
 from django.contrib import admin
 
-from .models import Favorite, Ingredient, Recipe, ShoppingCart, Tag
+from .models import (Favorite, Ingredient, Recipe, RecipesIngredient,
+                     ShoppingCart, Tag, RecipesTag)
+
+
+class TagsInLine(admin.TabularInline):
+    model = RecipesTag
+    rows = 4
 
 
 class IngredientsInLine(admin.TabularInline):
-    model = Recipe.ingredients.through
+    model = RecipesIngredient
+    rows = 5
 
 
 @admin.register(Recipe)
@@ -13,14 +20,13 @@ class RecipeAdmin(admin.ModelAdmin):
     search_fields = ('name', 'author__username')
     list_filter = ('tags',)
     empty_value_display = '-пусто-'
-    inlines = (
-        IngredientsInLine,
-    )
+    inlines = (IngredientsInLine, TagsInLine)
 
     def favorites(self, obj):
         if Favorite.objects.filter(recipe=obj).exists():
             return Favorite.objects.filter(recipe=obj).count()
-        return 0
+        else:
+            return 0
 
 
 @admin.register(Ingredient)

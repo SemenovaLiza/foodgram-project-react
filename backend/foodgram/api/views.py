@@ -1,5 +1,6 @@
 from django.db.models import Sum
 from django.http import HttpResponse
+from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
 from recipes.models import (Favorite, Ingredient, Recipe, RecipesIngredient,
@@ -10,14 +11,14 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 from users.models import CustomUser, Subscription
-from django.shortcuts import get_object_or_404
+
 from .filters import IngredientSearchFilter, RecipeFilter
 from .pagination import Pagination
 from .permissions import IsAuthorOrAdminOrReadOnly
 from .serializers import (AddRecipeSerializer, CustomUserSerializer,
                           FavoriteSerializer, IngredientSerializer,
                           RecipeSerializer, ShoppingCartSerializer,
-                          TagSerializer, SubscriptionSerializer)
+                          SubscriptionSerializer, TagSerializer)
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
@@ -63,7 +64,7 @@ class RecipeViewSet(ModelViewSet):
     @action(detail=False, methods=['get', ],
             permission_classes=[IsAuthenticated, ])
     def download_shopping_cart(self, request):
-        shopping_cart = ShoppingCart.objects.filter(user=self.request.user)
+        shopping_cart = ShoppingCart.objects.filter(user=request.user)
         recipes = [item.recipe.id for item in shopping_cart]
         purchase_list = RecipesIngredient.objects.filter(
             recipe__in=recipes
@@ -91,7 +92,9 @@ class RecipeViewSet(ModelViewSet):
                 'recipe': recipe.id,
                 'user': request.user.id
             }
-            serializer = obj_serializer(data=data, context={'request': request})
+            serializer = obj_serializer(
+                data=data, context={'request': request}
+            )
             if serializer.is_valid(raise_exception=True):
                 serializer.save()
                 return Response(
@@ -112,8 +115,8 @@ class CustomUserViewSet(UserViewSet):
     @action(detail=False, methods=['get'],
             permission_classes=[IsAuthenticated, ])
     def subscriptions(self, request):
-        subsctiptions = CustomUser.objects.filter(followers__follower=self.request.user)
-        pages = self.paginate_queryset(subsctiptions)
+        queryset = CustomUser.objects.filter(followers__follower=request.user)
+        pages = self.paginate_queryset(queryset)
         serializer = SubscriptionSerializer(
             pages, many=True, context={'request': request}
         )
@@ -123,14 +126,19 @@ class CustomUserViewSet(UserViewSet):
             permission_classes=[IsAuthenticated, ])
     def subscribe(self, request, id):
         following = get_object_or_404(CustomUser, pk=id)
+        user = request.user
         if request.method == 'POST':
-            serializer = SubscriptionSerializer(following, data=self.request.data, context={'request': request})
+            serializer = SubscriptionSerializer(
+                following, data=request.data, context={'request': request}
+            )
             if serializer.is_valid(raise_exception=True):
-                Subscription.objects.create(follower=self.request.user, following=following)
-                return Response(serializer.data, status=status.HTTP_201_CREATED)
+                Subscription.objects.create(follower=user, following=following)
+                return Response(
+                    serializer.data, status=status.HTTP_201_CREATED
+                )
 
         subscription = Subscription.objects.filter(
-            following=following, follower=self.request.user
+            following=following, follower=user
         )
         subscription.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
