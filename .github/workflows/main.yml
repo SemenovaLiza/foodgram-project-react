@@ -66,3 +66,6 @@ jobs:
           username: ${{ secrets.USER }}
           key: ${{ secrets.SSH_KEY }}
           passphrase: ${{ secrets.PASSPHRASE }}
+          script: |
+            cd foodgram-project-react/infra
+            sudo docker-compose down
