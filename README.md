@@ -1,6 +1,6 @@
 # Foodgram 
 
-![workflow badge for yamdb project](https://github.com/SemenovaLiza/foodgram-project-react/actions/workflows/workflow.yml/badge.svg)
+![workflow badge for yamdb project](https://github.com/SemenovaLiza/foodgram-project-react/actions/workflows/main.yml/badge.svg)
 
 A social network for sharing recipes, with the ability to download a list of ingredients for selected ones. Detailed documentation for the project and requests examples are available at
 ```
