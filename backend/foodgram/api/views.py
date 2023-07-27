@@ -126,7 +126,7 @@ class CustomUserViewSet(UserViewSet):
             permission_classes=[IsAuthenticated, ])
     def subscribe(self, request, id):
         following = get_object_or_404(CustomUser, pk=id)
-        user = request.user
+        user = CustomUser.objects.filter(followers__follower=request.user)
         if request.method == 'POST':
             serializer = SubscriptionSerializer(
                 following, data=request.data, context={'request': request}
