@@ -12,13 +12,13 @@ services:
     volumes:
       - pg_data:/var/lib/postgresql/data
   backend:
-    image: semenovaliza/foodgram_backend:v1.07.2023
+    image: semenovaliza/foodgram-backend:v1.07.2023
     env_file: .env
     volumes:
       - ../static/:/app/static/
       - ../media/:/app/media/
   frontend:
-    image: semenovaliza/foodgram_frontend:v1.07.2023
+    image: semenovaliza/foodgram-frontend:v1.07.2023
     volumes:
       - ../frontend/:/app/result_build/
     env_file: .env
