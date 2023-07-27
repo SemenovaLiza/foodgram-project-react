@@ -115,7 +115,7 @@ class CustomUserViewSet(UserViewSet):
     @action(detail=False, methods=['get'],
             permission_classes=[IsAuthenticated, ])
     def subscriptions(self, request):
-        queryset = request.user.following.all()
+        queryset = CustomUser.objects.filter(followers__follower=request.user)
         pages = self.paginate_queryset(queryset)
         serializer = SubscriptionSerializer(
             pages, many=True, context={'request': request}
@@ -126,7 +126,7 @@ class CustomUserViewSet(UserViewSet):
             permission_classes=[IsAuthenticated, ])
     def subscribe(self, request, id):
         following = get_object_or_404(CustomUser, pk=id)
-        user = CustomUser.objects.filter(followers__follower=request.user)
+        user = request.user
         if request.method == 'POST':
             serializer = SubscriptionSerializer(
                 following, data=request.data, context={'request': request}
