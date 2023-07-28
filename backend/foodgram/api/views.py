@@ -115,7 +115,7 @@ class CustomUserViewSet(UserViewSet):
     @action(detail=False, methods=['get'],
             permission_classes=[IsAuthenticated, ])
     def subscriptions(self, request):
-        queryset = CustomUser.objects.filter(followers__follower=request.user)
+        queryset = request.user.following.all()
         pages = self.paginate_queryset(queryset)
         serializer = SubscriptionSerializer(
             pages, many=True, context={'request': request}
