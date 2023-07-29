@@ -21,6 +21,27 @@ from .serializers import (AddRecipeSerializer, CustomUserSerializer,
                           SubscriptionSerializer, TagSerializer)
 
 
+def add_delete_obj(self, request, pk, obj_serializer, obj_model):
+    recipe = Recipe.objects.get(pk=pk)
+    if request.method == 'POST':
+        data = {
+            'recipe': recipe.id,
+            'user': request.user.id
+        }
+        serializer = obj_serializer(
+            data=data, context={'request': request}
+        )
+        if serializer.is_valid(raise_exception=True):
+            serializer.save()
+            return Response(
+                serializer.data, status=status.HTTP_201_CREATED
+            )
+
+    object = obj_model.objects.filter(recipe=recipe, user=request.user)
+    object.delete()
+    return Response(status=status.HTTP_204_NO_CONTENT)
+
+
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
     """Возвращает список тегов/конкретный тег."""
     queryset = Tag.objects.all()
@@ -52,12 +73,12 @@ class RecipeViewSet(ModelViewSet):
     @action(detail=True, methods=['post', 'delete'],
             permission_classes=[IsAuthenticated, ])
     def favorite(self, request, pk):
-        return self.add_delete_obj(request, pk, FavoriteSerializer, Favorite)
+        return add_delete_obj(request, pk, FavoriteSerializer, Favorite)
 
     @action(detail=True, methods=['post', 'delete'],
             permission_classes=[IsAuthenticated, ])
     def shopping_cart(self, request, pk):
-        return self.add_delete_obj(
+        return add_delete_obj(
             request, pk, ShoppingCartSerializer, ShoppingCart
         )
 
