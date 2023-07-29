@@ -69,7 +69,6 @@ jobs:
         key: ${{ secrets.SSH_KEY }}
         passphrase: ${{ secrets.SSH_PASSPHRASE }}
         script: |
-          cd foodgram-project-react/infra/
           sudo docker compose down
           sudo docker  pull semenovaliza/foodgram-backend:v1.07.2023
           sudo docker  pull semenovaliza/foodgram-frontend:v1.07.2023
