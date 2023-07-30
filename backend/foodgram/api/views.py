@@ -5,7 +5,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
 from recipes.models import (Favorite, Ingredient, Recipe, RecipesIngredient,
                             ShoppingCart, Tag)
-from rest_framework import mixins, status, viewsets
+from rest_framework import mixins, status, viewsets, views
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -105,14 +105,14 @@ def download_shopping_cart(request):
     return response
 
 
-class FavoriteViewSet(CreateDeleteMixin, RecipeViewSet):
+class FavoriteViewSet(CreateDeleteMixin, views.APIView):
     """Добавление/удаление рецепта из избранного."""
     serializer_class = FavoriteSerializer
     model = Favorite
     permission_classes = [IsAuthenticated, ]
 
 
-class ShoppingCartViewSet(CreateDeleteMixin, RecipeViewSet):
+class ShoppingCartViewSet(CreateDeleteMixin, views.APIView):
     """Добавление/удаление рецепта из списка покупок."""
     serializer_class = ShoppingCartSerializer
     model = ShoppingCart
@@ -136,7 +136,7 @@ class CustomUserViewSet(UserViewSet):
         return self.get_paginated_response(serializer.data)
 
 
-class SubscribeViewSet(CreateDeleteMixin, CustomUserViewSet):
+class SubscribeViewSet(CreateDeleteMixin, views.APIView):
     """Создание/удаление автора из подписок."""
     serializer_class = SubscriptionSerializer
     model = Subscription
