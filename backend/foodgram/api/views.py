@@ -6,7 +6,7 @@ from djoser.views import UserViewSet
 from recipes.models import (Favorite, Ingredient, Recipe, RecipesIngredient,
                             ShoppingCart, Tag)
 from rest_framework import mixins, status, viewsets
-from rest_framework.decorators import action, api_view
+from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from users.models import CustomUser, Subscription
@@ -78,7 +78,8 @@ class RecipeViewSet(CreateDeleteMixin, viewsets.ModelViewSet):
         return AddRecipeSerializer
 
 
-@api_view(http_method_names=['GET', ], permission_classes=[IsAuthenticated, ])
+@api_view(['GET', ])
+@permission_classes([IsAuthenticated, ])
 def download_shopping_cart(request):
     """Скачать txt файл со списком ингредиентов
        для всех рецептов из списка покупок."""
