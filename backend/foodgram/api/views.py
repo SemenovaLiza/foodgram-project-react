@@ -5,11 +5,10 @@ from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
 from recipes.models import (Favorite, Ingredient, Recipe, RecipesIngredient,
                             ShoppingCart, Tag)
-from rest_framework import status, viewsets
-from rest_framework.decorators import action
+from rest_framework import mixins, status, viewsets
+from rest_framework.decorators import action, api_view
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.viewsets import ModelViewSet
 from users.models import CustomUser, Subscription
 
 from .filters import IngredientSearchFilter, RecipeFilter
@@ -21,14 +20,20 @@ from .serializers import (AddRecipeSerializer, CustomUserSerializer,
                           SubscriptionSerializer, TagSerializer)
 
 
-def add_delete_obj(self, request, pk, obj_serializer, obj_model):
-    recipe = Recipe.objects.get(pk=pk)
-    if request.method == 'POST':
+class CreateDeleteMixin(mixins.CreateModelMixin,
+                        mixins.DestroyModelMixin,
+                        viewsets.GenericViewSet):
+    """Добавление и удаление объекта из базы данных."""
+    serializer_class = None
+    model = None
+
+    def post(self, request, id):
+        user = request.user
         data = {
-            'recipe': recipe.id,
-            'user': request.user.id
+            'recipe': id,
+            'user': user.id
         }
-        serializer = obj_serializer(
+        serializer = self.serializer_class(
             data=data, context={'request': request}
         )
         if serializer.is_valid(raise_exception=True):
@@ -37,9 +42,11 @@ def add_delete_obj(self, request, pk, obj_serializer, obj_model):
                 serializer.data, status=status.HTTP_201_CREATED
             )
 
-    object = obj_model.objects.filter(recipe=recipe, user=request.user)
-    object.delete()
-    return Response(status=status.HTTP_204_NO_CONTENT)
+    def delete(self, request, id):
+        user = request.user
+        object = self.model.objects.filter(recipe=id, user=user)
+        object.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
@@ -56,7 +63,7 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     search_fields = ('^name',)
 
 
-class RecipeViewSet(ModelViewSet):
+class RecipeViewSet(CreateDeleteMixin, viewsets.ModelViewSet):
     """Вывод работы с рецептами."""
     queryset = Recipe.objects.all()
     pagination_class = Pagination
@@ -70,61 +77,45 @@ class RecipeViewSet(ModelViewSet):
             return RecipeSerializer
         return AddRecipeSerializer
 
-    @action(detail=True, methods=['post', 'delete'],
-            permission_classes=[IsAuthenticated, ])
-    def favorite(self, request, pk):
-        return add_delete_obj(request, pk, FavoriteSerializer, Favorite)
 
-    @action(detail=True, methods=['post', 'delete'],
-            permission_classes=[IsAuthenticated, ])
-    def shopping_cart(self, request, pk):
-        return add_delete_obj(
-            request, pk, ShoppingCartSerializer, ShoppingCart
-        )
+@api_view(http_method_names=['GET', ], permission_classes=[IsAuthenticated, ])
+def download_shopping_cart(request):
+    """Скачать txt файл со списком ингредиентов
+       для всех рецептов из списка покупок."""
+    shopping_cart = ShoppingCart.objects.filter(user=request.user)
+    recipes = [item.recipe.id for item in shopping_cart]
+    purchase_list = RecipesIngredient.objects.filter(
+        recipe__in=recipes
+    ).values(
+        'ingredient'
+    ).annotate(ingredients_amount=Sum('amount'))
 
-    @action(detail=False, methods=['get', ],
-            permission_classes=[IsAuthenticated, ])
-    def download_shopping_cart(self, request):
-        shopping_cart = ShoppingCart.objects.filter(user=request.user)
-        recipes = [item.recipe.id for item in shopping_cart]
-        purchase_list = RecipesIngredient.objects.filter(
-            recipe__in=recipes
-        ).values(
-            'ingredient'
-        ).annotate(ingredients_amount=Sum('amount'))
+    text_file = f'Список покупок для {request.user.username} \n'
+    for item in purchase_list:
+        ingredient_id = item.get('ingredient')
+        amount = item.get('ingredients_amount')
+        ingredient = Ingredient.objects.get(pk=ingredient_id)
+        text_file += (f'{ingredient.name} - {amount}'
+                      f'{ingredient.measurement_unit} \n')
 
-        text_file = f'Список покупок для {request.user.username} \n'
-        for item in purchase_list:
-            ingredient_id = item.get('ingredient')
-            amount = item.get('ingredients_amount')
-            ingredient = Ingredient.objects.get(pk=ingredient_id)
-            text_file += (f'{ingredient.name} - {amount}'
-                          f'{ingredient.measurement_unit} \n')
+    response = HttpResponse(text_file, content_type='text.txt')
+    response['Content-Disposition'] = ('attachment;'
+                                       'filename="purchase_list.txt"')
+    return response
 
-        response = HttpResponse(text_file, content_type='text.txt')
-        response['Content-Disposition'] = ('attachment;'
-                                           'filename="purchase_list.txt"')
-        return response
 
-    def add_delete_obj(self, request, pk, obj_serializer, obj_model):
-        recipe = Recipe.objects.get(pk=pk)
-        if request.method == 'POST':
-            data = {
-                'recipe': recipe.id,
-                'user': request.user.id
-            }
-            serializer = obj_serializer(
-                data=data, context={'request': request}
-            )
-            if serializer.is_valid(raise_exception=True):
-                serializer.save()
-                return Response(
-                    serializer.data, status=status.HTTP_201_CREATED
-                )
+class FavoriteViewSet(CreateDeleteMixin, RecipeViewSet):
+    """Добавление/удаление рецепта из избранного."""
+    serializer_class = FavoriteSerializer
+    model = Favorite
+    permission_classes = [IsAuthenticated, ]
 
-        object = obj_model.objects.filter(recipe=recipe, user=request.user)
-        object.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+
+class ShoppingCartViewSet(CreateDeleteMixin, RecipeViewSet):
+    """Добавление/удаление рецепта из списка покупок."""
+    serializer_class = ShoppingCartSerializer
+    model = ShoppingCart
+    permission_classes = [IsAuthenticated, ]
 
 
 class CustomUserViewSet(UserViewSet):
@@ -143,9 +134,14 @@ class CustomUserViewSet(UserViewSet):
         )
         return self.get_paginated_response(serializer.data)
 
-    @action(detail=True, methods=['post', 'delete'],
-            permission_classes=[IsAuthenticated, ])
-    def subscribe(self, request, id):
+
+class SubscribeViewSet(CreateDeleteMixin, CustomUserViewSet):
+    """Создание/удаление автора из подписок."""
+    serializer_class = SubscriptionSerializer
+    model = Subscription
+    permission_classes = [IsAuthenticated, ]
+
+    def post(self, request, id):
         following = get_object_or_404(CustomUser, pk=id)
         user = request.user
         if request.method == 'POST':
@@ -157,9 +153,3 @@ class CustomUserViewSet(UserViewSet):
                 return Response(
                     serializer.data, status=status.HTTP_201_CREATED
                 )
-
-        subscription = Subscription.objects.filter(
-            following=following, follower=user
-        )
-        subscription.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)

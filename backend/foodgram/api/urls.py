@@ -3,8 +3,9 @@ from django.conf.urls.static import static
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
-from .views import (CustomUserViewSet, IngredientViewSet, RecipeViewSet,
-                    TagViewSet)
+from .views import (CustomUserViewSet, FavoriteViewSet, IngredientViewSet,
+                    RecipeViewSet, ShoppingCartViewSet, SubscribeViewSet,
+                    TagViewSet, download_shopping_cart)
 
 router = DefaultRouter()
 router.register('tags', TagViewSet, basename='tags')
@@ -15,6 +16,22 @@ router.register('users', CustomUserViewSet, basename='users')
 
 urlpatterns = [
     path('', include(router.urls)),
+    path('recipes/<int:id>/shopping_cart/',
+         ShoppingCartViewSet.as_view(),
+         name='shopping_cart'),
+    path('recipes/<int:id>/favorite/',
+         FavoriteViewSet.as_view(),
+         name='favorite'),
+    path(
+        'users/<int:id>/subscribe/',
+        SubscribeViewSet.as_view(),
+        name='subscribe'
+    ),
+    path(
+        'recipes/<int:id>/download_shopping_cart/',
+        download_shopping_cart,
+        name='subscribe'
+    ),
     path('auth/', include('djoser.urls.authtoken')),
     path('', include('djoser.urls'))
 ]
