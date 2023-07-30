@@ -63,7 +63,7 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     search_fields = ('^name',)
 
 
-class RecipeViewSet(CreateDeleteMixin, viewsets.ModelViewSet):
+class RecipeViewSet(viewsets.ModelViewSet):
     """Вывод работы с рецептами."""
     queryset = Recipe.objects.all()
     pagination_class = Pagination
