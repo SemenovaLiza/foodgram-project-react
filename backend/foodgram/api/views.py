@@ -9,7 +9,7 @@ from rest_framework import status, views, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from users.models import CustomUser, Subscription
+from users.models import CustomUser
 
 from .filters import IngredientSearchFilter, RecipeFilter
 from .pagination import Pagination
@@ -17,7 +17,7 @@ from .permissions import IsAuthorOrAdminOrReadOnly
 from .serializers import (AddRecipeSerializer, CustomUserSerializer,
                           FavoriteSerializer, IngredientSerializer,
                           RecipeSerializer, ShoppingCartSerializer,
-                          SubscribeSerializer, SubscriptionSerializer,
+                          SubscriptionSerializer,
                           TagSerializer)
 
 
@@ -130,10 +130,6 @@ class CustomUserViewSet(UserViewSet):
 
 class SubscribeViewSet(PostDeleteMixin, views.APIView):
     """Создание/удаление автора из подписок."""
-    model_class = Subscription
-    serializer_class = SubscribeSerializer
-    obj_model = CustomUser
-    object_name = 'following'
 
 
 class FavoriteView(PostDeleteMixin, views.APIView):
