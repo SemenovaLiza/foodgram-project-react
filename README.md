@@ -58,7 +58,7 @@ sudo docker compose exec backend python manage.py collectstatic
 - 
 This project is available at:
 ```
-http://84.201.152.177/recipes
+http://130.193.41.215/recipes
 ```
 
 **Для проверки админки:**
