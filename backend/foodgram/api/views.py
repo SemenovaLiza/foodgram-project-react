@@ -17,8 +17,7 @@ from .permissions import IsAuthorOrAdminOrReadOnly
 from .serializers import (AddRecipeSerializer, CustomUserSerializer,
                           FavoriteSerializer, IngredientSerializer,
                           RecipeSerializer, ShoppingCartSerializer,
-                          SubscriptionSerializer,
-                          TagSerializer)
+                          SubscriptionSerializer, TagSerializer)
 
 
 @api_view(http_method_names=['GET', ])
