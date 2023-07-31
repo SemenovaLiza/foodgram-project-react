@@ -76,7 +76,7 @@ class SubscriptionSerializer(CustomUserSerializer):
 
 
 class SubscribeSerializer(serializers.ModelSerializer):
-
+    """Сериализатор для создания подписки на автора рецепта."""
     class Meta:
         model = Subscription
         fields = ('user', 'following')

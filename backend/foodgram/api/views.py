@@ -24,6 +24,8 @@ from .serializers import (AddRecipeSerializer, CustomUserSerializer,
 @api_view(http_method_names=['GET', ])
 @permission_classes([IsAuthenticated, ])
 def download_shopping_cart(request):
+    """Функция для скачивания списка ингредиентов
+       из всех добавлених в список покупок рецептов."""
     shopping_cart = ShoppingCart.objects.filter(user=request.user)
     recipes = [item.recipe.id for item in shopping_cart]
     purchase_list = RecipesIngredient.objects.filter(
