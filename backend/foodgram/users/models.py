@@ -55,7 +55,7 @@ class CustomUser(AbstractUser):
 
 class Subscription(models.Model):
     """Модель подписки."""
-    follower = models.ForeignKey(
+    user = models.ForeignKey(
         CustomUser,
         on_delete=models.CASCADE,
         related_name='following',
@@ -73,7 +73,7 @@ class Subscription(models.Model):
         verbose_name_plural = 'Подписки',
         constraints = [
             models.UniqueConstraint(
-                fields=['follower', 'following'],
-                name='unique_follower_following'
+                fields=['user', 'following'],
+                name='unique_user_following'
             )
         ]

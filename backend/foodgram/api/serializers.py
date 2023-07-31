@@ -75,6 +75,19 @@ class SubscriptionSerializer(CustomUserSerializer):
         return user.recipes.count()
 
 
+class SubscribeSerializer(serializers.ModelSerializer):
+    """Сериализатор для создания подписки на автора рецепта."""
+    class Meta:
+        model = Subscription
+        fields = ('user', 'following')
+
+    def to_representation(self, instance):
+        return SubscriptionSerializer(
+            instance.following,
+            context={'request': self.context.get('request')}
+        ).data
+
+
 class TagSerializer(serializers.ModelSerializer):
     """Сериализатор для отображения тегов."""
     class Meta:
@@ -214,6 +227,10 @@ class ShortRecipeSerializer(serializers.ModelSerializer):
 
 class FavoriteSerializer(serializers.ModelSerializer):
     """Сериализатор для избранного."""
+    user = serializers.PrimaryKeyRelatedField(
+        read_only=True, default=serializers.CurrentUserDefault()
+    )
+
     class Meta:
         model = Favorite
         fields = ('recipe', 'user')
