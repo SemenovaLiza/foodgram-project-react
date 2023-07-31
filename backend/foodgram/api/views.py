@@ -25,7 +25,7 @@ from .serializers import (AddRecipeSerializer, CustomUserSerializer,
 @permission_classes([IsAuthenticated, ])
 def download_shopping_cart(request):
     """Функция для скачивания списка ингредиентов
-       из всех добавлених в список покупок рецептов."""
+       из всех добавленых в список покупок рецептов."""
     shopping_cart = ShoppingCart.objects.filter(user=request.user)
     recipes = [item.recipe.id for item in shopping_cart]
     purchase_list = RecipesIngredient.objects.filter(
@@ -138,11 +138,11 @@ class SubscribeViewSet(PostDeleteMixin, views.APIView):
 
 class FavoriteView(PostDeleteMixin, views.APIView):
     """ Добавление/удаление рецепта из избранного. """
-    model = Favorite
+    model_class = Favorite
     serializer_class = FavoriteSerializer
 
 
 class ShoppingCartViewSet(PostDeleteMixin, views.APIView):
     """Добавление/удаление рецепта из списка покупок."""
-    model = ShoppingCart
+    model_class = ShoppingCart
     serializer_class = ShoppingCartSerializer
