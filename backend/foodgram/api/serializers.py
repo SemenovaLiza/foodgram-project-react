@@ -26,7 +26,7 @@ class CustomUserSerializer(UserSerializer):
         if user.is_anonymous:
             return False
         return Subscription.objects.filter(
-            follower=user,
+            user=user,
             following=obj.id
         ).exists()
 
@@ -76,7 +76,7 @@ class SubscriptionSerializer(CustomUserSerializer):
 
 
 class SubscribeSerializer(serializers.ModelSerializer):
-    """Сериализатор для создания подписки на автора рецепта."""
+
     class Meta:
         model = Subscription
         fields = ('user', 'following')
@@ -227,9 +227,6 @@ class ShortRecipeSerializer(serializers.ModelSerializer):
 
 class FavoriteSerializer(serializers.ModelSerializer):
     """Сериализатор для избранного."""
-    user = serializers.PrimaryKeyRelatedField(
-        read_only=True, default=serializers.CurrentUserDefault()
-    )
 
     class Meta:
         model = Favorite
@@ -241,5 +238,6 @@ class FavoriteSerializer(serializers.ModelSerializer):
 
 class ShoppingCartSerializer(FavoriteSerializer):
     """Сериализатор для корзины с рецептами."""
+
     class Meta(FavoriteSerializer.Meta):
         model = ShoppingCart

@@ -13,12 +13,12 @@ class CustomUserAdmin(admin.ModelAdmin):
 
 @admin.register(Subscription)
 class SubscriptionAdmin(admin.ModelAdmin):
-    list_display = ('follower', 'following')
+    list_display = ('user', 'following')
     search_fields = (
-        'follower__username',
-        'follower__email',
+        'user__username',
+        'user__email',
         'following__username',
         'following__email'
     )
-    list_filter = ('follower__username', 'following__username')
+    list_filter = ('user__username', 'following__username')
     empty_value_display = '-пусто-'
