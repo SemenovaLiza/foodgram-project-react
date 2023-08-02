@@ -4,7 +4,7 @@
 
 A social network for sharing recipes, with the ability to download a list of ingredients for selected ones. Detailed documentation for the project and requests examples are available at
 ```
-http://84.201.152.177/api/docs/redoc.html
+http://localhost/api/docs/
 ```
 ### *Description*
 A social network for sharing recipes, with the ability to download a list of ingredients for selected ones.
