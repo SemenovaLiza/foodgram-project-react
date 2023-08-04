@@ -11,7 +11,7 @@ AUTH_USER_MODEL = "users.CustomUser"
 
 SECRET_KEY = 'django-insecure-2zu^uvf9ko1y@shp2n3y8-6k47h@1b(e)6-^8h*)0w&5(x=!(w'
 
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['*']
 
