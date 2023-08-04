@@ -17,8 +17,6 @@ services:
       - db
     env_file:
       - .env
-    restart: always
-    container_name: foodgram_backend
 
   frontend:
     image: semenovaliza/foodgram-frontend:v1.07.2023
@@ -26,8 +24,6 @@ services:
       - ../frontend/:/app/result_build/
     depends_on:
       - db
-    container_name: foodgram_frontend
-
 
   nginx:
     image: nginx:1.19.3
@@ -41,7 +37,6 @@ services:
       - media_value:/var/html/media/
     depends_on:
       - backend
-    container_name: foodgram_nginx
 
 volumes:
   postgres_data:
