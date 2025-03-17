@@ -69,11 +69,11 @@ This project is available at:
 http://130.193.41.215/recipes
 ```
 
-**Для проверки админки:**
+**Admin credentials:**
 ```
-логин: thealeeeaaa23@gmail.com
-пароль: d14hgpokidoki
+login: youremail@domain
+password: yourpassword
 ```
 
 ### *Author*
-Semenova Elizaveta
+Elizaveta Semenova
