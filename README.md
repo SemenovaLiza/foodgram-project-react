@@ -30,8 +30,8 @@ A social network for sharing recipes, with the ability to download a list of ing
 
 ## At a glance
 User's page                     |  Subscription page                  | Ingredients list
-:------------------------------------:|:-----------------------------------:|:-----------------------------------:
-![](./app_images/author.png) | ![](./app_images/subscriptions.png) | ![](./app_images/bulist.png)
+:-----------------------------:|:-----------------------------:|:-----------------------------:
+![](./app_images/author.png) | ![](./app_images/subscriptions.png) | ![](./app_images/buylist.png)
 
 ### *How to launch a project on remote server*
 clone the repository locally.
