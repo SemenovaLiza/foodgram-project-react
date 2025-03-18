@@ -67,8 +67,6 @@ sudo docker compose exec backend python manage.py load_data
 sudo docker compose exec backend python manage.py createsuperuser
 sudo docker compose exec backend python manage.py collectstatic
 ```
-### *Examples of requests:*
-- 
 This project is available at:
 ```
 http://130.193.41.215/recipes
