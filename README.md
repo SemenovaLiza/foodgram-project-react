@@ -9,7 +9,7 @@
 ![Status](https://img.shields.io/badge/status-finished-green?style=flat-square)
 
 
-A social network for sharing recipes, with the ability to download a list of ingredients for selected ones. Detailed documentation for the project and requests examples are available at
+A social network for sharing recipes, with the ability to download a list of ingredients for selected ones. After adding recipes into cart, user can download list with required ingredients. Detailed documentation for the project and requests examples are available at
 ```
 http://130.193.41.215/api/docs/
 ```
@@ -28,9 +28,10 @@ A social network for sharing recipes, with the ability to download a list of ing
   
 ###### *The rest of the technologies can be found in the requirements.txt file*
 
-# UI
-### Main page and Users page
-
+## At a glance
+User's page                     |  Subscription page                  | Ingredients list
+:------------------------------------:|:-----------------------------------:|:-----------------------------------:
+![](./app_images/author.png) | ![](./app_images/subscriptions.png) | ![](./app_images/bulist.png)
 
 ### *How to launch a project on remote server*
 clone the repository locally.
