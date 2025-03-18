@@ -28,6 +28,10 @@ A social network for sharing recipes, with the ability to download a list of ing
   
 ###### *The rest of the technologies can be found in the requirements.txt file*
 
+# UI
+### Main page and Users page
+
+
 ### *How to launch a project on remote server*
 clone the repository locally.
 ```
