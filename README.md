@@ -1,4 +1,4 @@
-# Foodgram 
+# Foodio
 
 ![workflow badge for yamdb project](https://github.com/SemenovaLiza/foodgram-project-react/actions/workflows/main.yml/badge.svg)
 ![Python](https://img.shields.io/badge/Python-3.7-blue)
